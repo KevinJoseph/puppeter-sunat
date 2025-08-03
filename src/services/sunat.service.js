@@ -21,12 +21,22 @@ const browser = await puppeteer.launch({
     await page.click('a[href*="cl-ti-itmenu"]');
 
     // Esperar nueva pestaña
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    const pages = await browser.pages();
-    const sunatPage = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
-    if (!sunatPage) throw new Error('No se encontró la pestaña del menú');
+await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true });
+await new Promise(resolve => setTimeout(resolve, 2000)); // espera adicional por seguridad
+await page.click('a[href*="cl-ti-itmenu"]');
 
-    await sunatPage.bringToFront();
+// Espera explícita hasta que haya una nueva pestaña abierta
+let newTab;
+for (let i = 0; i < 10; i++) {
+  const pages = await browser.pages();
+  newTab = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
+  if (newTab) break;
+  await new Promise(r => setTimeout(r, 1000)); // esperar 1 segundo y volver a intentar
+}
+if (!newTab) throw new Error('No se encontró la pestaña del menú');
+
+await newTab.bringToFront();
+
 
     // Login
     await sunatPage.waitForSelector('#txtRuc');
