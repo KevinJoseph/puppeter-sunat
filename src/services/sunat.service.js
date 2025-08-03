@@ -18,19 +18,28 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'load', timeout: 90000 });
 
     await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 60000 });
-    await new Promise(resolve => setTimeout(resolve, 6000));
-    await page.click('a[href*="cl-ti-itmenu"]');
-    console.log("🖱️ Clic en acceso SOL");
+    await new Promise(resolve => setTimeout(resolve, 4000));
 
-    // Esperar apertura de nueva pestaña
-    let newTab;
-    for (let i = 0; i < 30; i++) {
-      const pages = await browser.pages();
-      newTab = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
-      if (newTab) break;
-      await new Promise(r => setTimeout(r, 1500));
-    }
-    if (!newTab) throw new Error('❌ No se encontró la pestaña del menú');
+    console.log("🖱️ Clic en acceso SOL y esperando nueva pestaña...");
+
+    const [newTab] = await Promise.all([
+      new Promise(resolve => {
+        const check = setInterval(async () => {
+          const pages = await browser.pages();
+          const target = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
+          if (target) {
+            clearInterval(check);
+            resolve(target);
+          }
+        }, 1000);
+      }),
+      (async () => {
+        await new Promise(resolve => setTimeout(resolve, 500)); // pequeña pausa
+        await page.click('a[href*="cl-ti-itmenu"]');
+      })()
+    ]);
+
+    if (!newTab) throw new Error('❌ No se abrió la pestaña del menú');
 
     await newTab.bringToFront();
     const sunatPage = newTab;
@@ -43,14 +52,13 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await sunatPage.type('#txtUsuario', username, { delay: 200 });
     await new Promise(r => setTimeout(r, 1500));
     await sunatPage.type('#txtContrasena', password, { delay: 200 });
-
     await new Promise(r => setTimeout(r, 1500));
     await sunatPage.click('#btnAceptar');
 
     await sunatPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 });
     console.log('✅ Login enviado');
 
-    // Selección de idioma (si aparece)
+    // Selección de idioma
     try {
       await sunatPage.waitForSelector('.dropdown-menu.show span', { timeout: 10000 });
       const opciones = await sunatPage.$$('.dropdown-menu.show span');
