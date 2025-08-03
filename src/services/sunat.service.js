@@ -2,11 +2,12 @@ const puppeteer = require('puppeteer');
 
 exports.runPuppeteerScript = async (ruc, username, password) => {
   try {
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: ['--no-sandbox'],
-      defaultViewport: null,
-    });
+const browser = await puppeteer.launch({
+  headless: false,
+  args: ['--no-sandbox'],
+  defaultViewport: null,
+  executablePath: '/usr/bin/google-chrome'
+});
 
     const page = await browser.newPage();
     await page.setUserAgent(
