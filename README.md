@@ -44,9 +44,9 @@ To use the API, send a POST request to the `/api/sunat` endpoint with the follow
 
 ```json
 {
-  "ruc": "20613458876",
-  "username": "CYAREWORD",
-  "password": "siscibler"
+  "ruc": "XXXXXX",
+  "username": "XXXXXX",
+  "password": "XXXXXX"
 }
 ```
 
