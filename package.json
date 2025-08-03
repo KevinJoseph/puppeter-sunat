@@ -1,0 +1,17 @@
+{
+  "name": "sunat-api",
+  "version": "1.0.0",
+  "description": "An Express API for executing Puppeteer scripts to interact with SUNAT.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "puppeteer": "^10.4.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
