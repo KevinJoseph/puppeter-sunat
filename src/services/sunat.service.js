@@ -22,9 +22,17 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     console.log("🖱️ Preparando clic lento en acceso SOL...");
     const botonSol = await page.$('a[href*="cl-ti-itmenu"]');
     const boundingBox = await botonSol.boundingBox();
-    await page.mouse.move(boundingBox.x + boundingBox.width / 2, boundingBox.y + boundingBox.height / 2, { steps: 30 });
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    await botonSol.click({ delay: 300 });
+
+    // Movimiento del mouse más lento y natural
+    await page.mouse.move(
+      boundingBox.x + boundingBox.width / 2,
+      boundingBox.y + boundingBox.height / 2,
+      { steps: 50 }
+    );
+
+    // Espera extra antes de hacer clic
+    await new Promise(resolve => setTimeout(resolve, 7000));
+    await botonSol.click({ delay: 500 });
 
     console.log("🕒 Esperando nueva pestaña...");
     const [newTab] = await Promise.all([
@@ -47,13 +55,13 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
     console.log("⌨️ Llenando formulario de login...");
     await sunatPage.waitForSelector('#txtRuc', { timeout: 60000 });
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
     await sunatPage.type('#txtRuc', ruc, { delay: 200 });
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
     await sunatPage.type('#txtUsuario', username, { delay: 200 });
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
     await sunatPage.type('#txtContrasena', password, { delay: 200 });
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
     await sunatPage.click('#btnAceptar');
 
     await sunatPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 });
@@ -80,7 +88,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       const frameHandle = await sunatPage.$('#iframeApplication');
       const frame = await frameHandle.contentFrame();
 
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise(r => setTimeout(r, 4000));
       await frame.waitForSelector('#aListMen', { timeout: 60000 });
       await frame.click('#aListMen');
       console.log('📨 Clic en "Buzón Mensajes"');
