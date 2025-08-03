@@ -124,7 +124,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
       await frame.waitForSelector('#listaMensajes li', { timeout: 40000 });
 
-      const mensajes = await frame.$$eval('#listaMensajes li', items =>
+      const notificaciones = await frame.$$eval('#listaMensajes li', items =>
         items.map((li, index) => {
           const asunto = li.querySelector('a.linkMensaje.text-muted')?.innerText.trim() || 'Sin asunto';
           const fecha = li.querySelector('small.text-muted')?.innerText.trim() || 'Sin fecha';
@@ -152,11 +152,11 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
       return {
         success: true,
-        mensajes
+        notificaciones
       };
 
     } catch (err) {
-      throw new Error(`⚠️ Error al procesar mensajes: ${err.message}`);
+      throw new Error(`⚠️ Error al procesar notificaciones: ${err.message}`);
     } finally {
       await new Promise(resolve => setTimeout(resolve, 7000));
       await browser.close();
