@@ -2,12 +2,12 @@ const puppeteer = require('puppeteer');
 
 exports.runPuppeteerScript = async (ruc, username, password) => {
   try {
-const browser = await puppeteer.launch({
-  headless: false,
-  args: ['--no-sandbox'],
-  defaultViewport: null,
-  executablePath: '/usr/bin/google-chrome'
-});
+    const browser = await puppeteer.launch({
+      headless: false,
+      args: ['--no-sandbox'],
+      defaultViewport: null,
+      executablePath: '/usr/bin/google-chrome' // asegúrate que esté instalado en el VPS
+    });
 
     const page = await browser.newPage();
     await page.setUserAgent(
@@ -16,31 +16,27 @@ const browser = await puppeteer.launch({
 
     await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'networkidle2' });
 
-    // Clic en botón de acceso a Menú SOL
-    await page.waitForSelector('a[href*="cl-ti-itmenu"]');
+    // Asegurarse de que el botón esté visible y hacer clic
+    await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true });
+    await new Promise(resolve => setTimeout(resolve, 2000));
     await page.click('a[href*="cl-ti-itmenu"]');
 
-    // Esperar nueva pestaña
-await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true });
-await new Promise(resolve => setTimeout(resolve, 2000)); // espera adicional por seguridad
-await page.click('a[href*="cl-ti-itmenu"]');
+    // Esperar la nueva pestaña
+    let newTab;
+    for (let i = 0; i < 10; i++) {
+      const pages = await browser.pages();
+      newTab = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
+      if (newTab) break;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!newTab) throw new Error('No se encontró la pestaña del menú');
 
-// Espera explícita hasta que haya una nueva pestaña abierta
-let newTab;
-for (let i = 0; i < 10; i++) {
-  const pages = await browser.pages();
-  newTab = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
-  if (newTab) break;
-  await new Promise(r => setTimeout(r, 1000)); // esperar 1 segundo y volver a intentar
-}
-if (!newTab) throw new Error('No se encontró la pestaña del menú');
-
-await newTab.bringToFront();
-
+    await newTab.bringToFront();
+    const sunatPage = newTab;
 
     // Login
-    await sunatPage.waitForSelector('#txtRuc');
-    await sunatPage.type('#txtRuc', ruc, { delay: 100 });       
+    await sunatPage.waitForSelector('#txtRuc', { timeout: 10000 });
+    await sunatPage.type('#txtRuc', ruc, { delay: 100 });
     await sunatPage.type('#txtUsuario', username, { delay: 100 });
     await sunatPage.type('#txtContrasena', password, { delay: 100 });
     await sunatPage.click('#btnAceptar');
@@ -66,9 +62,6 @@ await newTab.bringToFront();
       console.log('✅ No apareció popup de idioma');
     }
 
-    // Array para almacenar los mensajes
-    const resultados = [];
-      
     // Acceder al iframe y hacer clic en Buzón Mensajes
     try {
       await sunatPage.waitForSelector('#iframeApplication', { timeout: 10000 });
@@ -82,25 +75,20 @@ await newTab.bringToFront();
       await frame.waitForSelector('#listaMensajes li', { timeout: 10000 });
 
       const mensajes = await frame.$$eval('#listaMensajes li', items =>
-        items.map(li => {
+        items.map((li, index) => {
           const asunto = li.querySelector('a.linkMensaje.text-muted')?.innerText.trim() || 'Sin asunto';
           const fecha = li.querySelector('small.text-muted')?.innerText.trim() || 'Sin fecha';
           return {
-            numero: 0, // se actualizará después
-            asunto: asunto,
-            fecha: fecha
+            numero: index + 1,
+            asunto,
+            fecha
           };
         })
       );
 
-      // Actualizar el número de cada mensaje
-      mensajes.forEach((msg, index) => {
-        msg.numero = index + 1;
-      });
-
       return {
         success: true,
-        mensajes: mensajes // Ahora es un array de objetos
+        mensajes
       };
 
     } catch (err) {
