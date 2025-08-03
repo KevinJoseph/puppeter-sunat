@@ -137,8 +137,10 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
             numero: index + 1,
             asunto,
             fecha,
-            textTag,
-            colorTag
+            tag: {
+                  text: textTag,
+                  color: colorTag
+            }
           };
         })
       );
