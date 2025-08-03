@@ -128,13 +128,13 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
         items.map((li, index) => {
           const asunto = li.querySelector('a.linkMensaje.text-muted')?.innerText.trim() || 'Sin asunto';
           const fecha = li.querySelector('small.text-muted')?.innerText.trim() || 'Sin fecha';
-          //Etiqueta texto
-          const spanEtiqueta = li.querySelector('span.label.tag.resoluciones');
+
+          const spanEtiqueta = li.querySelector('span.label.tag');
           const textTag = spanEtiqueta?.innerText.trim() || 'Sin etiqueta';
-          // Extrae estilos inline del span
+
           let colorFondo = '';
           if (spanEtiqueta?.style) {
-              colorFondo = spanEtiqueta.style.background || '';
+            colorFondo = spanEtiqueta.style.background || '';
           }
 
           return {
@@ -142,12 +142,13 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
             asunto,
             fecha,
             tag: {
-                  text: textTag,
-                  color: colorFondo
+              text: textTag,
+              color: colorFondo
             }
           };
         })
       );
+
 
       return {
         success: true,
