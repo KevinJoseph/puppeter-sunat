@@ -128,12 +128,17 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
         items.map((li, index) => {
           const asunto = li.querySelector('a.linkMensaje.text-muted')?.innerText.trim() || 'Sin asunto';
           const fecha = li.querySelector('small.text-muted')?.innerText.trim() || 'Sin fecha';
-          const etiqueta = li.querySelector('span.label.tag.resoluciones')?.innerText.trim() || 'Sin etiqueta';
+          //Etiequeta texto y color
+          const spanEtiqueta = li.querySelector('span.label.tag.resoluciones');
+          const textTag = spanEtiqueta?.innerText.trim() || 'Sin etiqueta';
+          const colorTag = spanEtiqueta
+
           return {
             numero: index + 1,
             asunto,
             fecha,
-            etiqueta
+            textTag,
+            colorTag
           };
         })
       );
