@@ -6,7 +6,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       headless: false,
       args: ['--no-sandbox'],
       defaultViewport: null,
-      executablePath: '/usr/bin/google-chrome' // asegúrate que esté instalado en el VPS
+      executablePath: '/usr/bin/google-chrome'
     });
 
     const page = await browser.newPage();
@@ -14,16 +14,17 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
     );
 
-    await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'networkidle2' });
+    console.log("🌐 Abriendo página principal...");
+    await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'load', timeout: 60000 });
 
-    // Asegurarse de que el botón esté visible y hacer clic
-    await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Aumentar espera antes del clic
+    await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 30000 });
+    await new Promise(resolve => setTimeout(resolve, 4000));
     await page.click('a[href*="cl-ti-itmenu"]');
 
-    // Esperar la nueva pestaña
+    console.log("🕒 Esperando nueva pestaña...");
     let newTab;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       const pages = await browser.pages();
       newTab = pages.find(p => p.url().includes('e-menu.sunat.gob.pe'));
       if (newTab) break;
@@ -34,21 +35,22 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await newTab.bringToFront();
     const sunatPage = newTab;
 
-    // Login
-    await sunatPage.waitForSelector('#txtRuc', { timeout: 10000 });
-    await sunatPage.type('#txtRuc', ruc, { delay: 100 });
-    await sunatPage.type('#txtUsuario', username, { delay: 100 });
-    await sunatPage.type('#txtContrasena', password, { delay: 100 });
+    console.log("⌨️ Llenando formulario...");
+    await sunatPage.waitForSelector('#txtRuc', { timeout: 30000 });
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await sunatPage.type('#txtRuc', ruc, { delay: 150 });
+    await sunatPage.type('#txtUsuario', username, { delay: 150 });
+    await sunatPage.type('#txtContrasena', password, { delay: 150 });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await sunatPage.click('#btnAceptar');
 
-    // Esperar que cargue la siguiente vista
-    await sunatPage.waitForNavigation({ waitUntil: 'networkidle2' });
-
+    await sunatPage.waitForNavigation({ waitUntil: 'load', timeout: 60000 });
     console.log('✅ Login enviado');
 
     // Seleccionar idioma si aparece
     try {
-      await sunatPage.waitForSelector('.dropdown-menu.show span', { timeout: 5000 });
+      await sunatPage.waitForSelector('.dropdown-menu.show span', { timeout: 7000 });
       const opciones = await sunatPage.$$('.dropdown-menu.show span');
       for (const opcion of opciones) {
         const text = await sunatPage.evaluate(el => el.innerText.trim(), opcion);
@@ -62,17 +64,18 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       console.log('✅ No apareció popup de idioma');
     }
 
-    // Acceder al iframe y hacer clic en Buzón Mensajes
     try {
-      await sunatPage.waitForSelector('#iframeApplication', { timeout: 10000 });
+      console.log("🧭 Esperando iframe...");
+      await sunatPage.waitForSelector('#iframeApplication', { timeout: 20000 });
       const frameHandle = await sunatPage.$('#iframeApplication');
       const frame = await frameHandle.contentFrame();
 
-      await frame.waitForSelector('#aListMen', { timeout: 10000 });
+      await frame.waitForSelector('#aListMen', { timeout: 20000 });
+      await new Promise(resolve => setTimeout(resolve, 2000));
       await frame.click('#aListMen');
       console.log('✅ Clic en "Buzón Mensajes" dentro del iframe realizado');
 
-      await frame.waitForSelector('#listaMensajes li', { timeout: 10000 });
+      await frame.waitForSelector('#listaMensajes li', { timeout: 20000 });
 
       const mensajes = await frame.$$eval('#listaMensajes li', items =>
         items.map((li, index) => {
@@ -94,6 +97,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     } catch (err) {
       throw new Error(`Error al procesar mensajes: ${err.message}`);
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 3000)); // espera antes de cerrar
       await browser.close();
     }
 
