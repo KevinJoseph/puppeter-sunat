@@ -19,19 +19,25 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
     await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 60000 });
 
-    console.log("🖱️ Preparando clic lento en acceso SOL...");
+    console.log("🖱️ Scroll lento hacia el botón SOL...");
+    await page.evaluate(() => {
+      const el = document.querySelector('a[href*="cl-ti-itmenu"]');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 7000));
+
+    console.log("🖱️ Movimiento del mouse lento...");
     const botonSol = await page.$('a[href*="cl-ti-itmenu"]');
     const boundingBox = await botonSol.boundingBox();
-
-    // Movimiento del mouse más lento y natural
+    await page.mouse.move(0, 0);
+    await new Promise(r => setTimeout(r, 1000));
     await page.mouse.move(
       boundingBox.x + boundingBox.width / 2,
       boundingBox.y + boundingBox.height / 2,
-      { steps: 50 }
+      { steps: 70 }
     );
-
-    // Espera extra antes de hacer clic
-    await new Promise(resolve => setTimeout(resolve, 7000));
+    await new Promise(resolve => setTimeout(resolve, 6000));
     await botonSol.click({ delay: 500 });
 
     console.log("🕒 Esperando nueva pestaña...");
@@ -57,12 +63,21 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await sunatPage.waitForSelector('#txtRuc', { timeout: 60000 });
     await new Promise(r => setTimeout(r, 3000));
     await sunatPage.type('#txtRuc', ruc, { delay: 200 });
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
     await sunatPage.type('#txtUsuario', username, { delay: 200 });
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 3000));
     await sunatPage.type('#txtContrasena', password, { delay: 200 });
-    await new Promise(r => setTimeout(r, 2000));
-    await sunatPage.click('#btnAceptar');
+    await new Promise(r => setTimeout(r, 3000));
+
+    const btnAceptar = await sunatPage.$('#btnAceptar');
+    const btnBox = await btnAceptar.boundingBox();
+    await sunatPage.mouse.move(
+      btnBox.x + btnBox.width / 2,
+      btnBox.y + btnBox.height / 2,
+      { steps: 50 }
+    );
+    await new Promise(r => setTimeout(r, 4000));
+    await btnAceptar.click({ delay: 400 });
 
     await sunatPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 });
     console.log('✅ Login enviado');
@@ -88,9 +103,19 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       const frameHandle = await sunatPage.$('#iframeApplication');
       const frame = await frameHandle.contentFrame();
 
-      await new Promise(r => setTimeout(r, 4000));
+      await new Promise(r => setTimeout(r, 5000));
       await frame.waitForSelector('#aListMen', { timeout: 60000 });
-      await frame.click('#aListMen');
+
+      const btnMensajes = await frame.$('#aListMen');
+      const msgBox = await btnMensajes.boundingBox();
+      await sunatPage.mouse.move(
+        msgBox.x + msgBox.width / 2,
+        msgBox.y + msgBox.height / 2,
+        { steps: 50 }
+      );
+      await new Promise(r => setTimeout(r, 4000));
+      await btnMensajes.click({ delay: 400 });
+
       console.log('📨 Clic en "Buzón Mensajes"');
 
       await frame.waitForSelector('#listaMensajes li', { timeout: 60000 });
@@ -115,7 +140,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     } catch (err) {
       throw new Error(`⚠️ Error al procesar mensajes: ${err.message}`);
     } finally {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 7000));
       await browser.close();
     }
 
