@@ -18,10 +18,15 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'load', timeout: 90000 });
 
     await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 60000 });
-    await new Promise(resolve => setTimeout(resolve, 4000));
 
-    console.log("🖱️ Clic en acceso SOL y esperando nueva pestaña...");
+    console.log("🖱️ Preparando clic lento en acceso SOL...");
+    const botonSol = await page.$('a[href*="cl-ti-itmenu"]');
+    const boundingBox = await botonSol.boundingBox();
+    await page.mouse.move(boundingBox.x + boundingBox.width / 2, boundingBox.y + boundingBox.height / 2, { steps: 30 });
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    await botonSol.click({ delay: 300 });
 
+    console.log("🕒 Esperando nueva pestaña...");
     const [newTab] = await Promise.all([
       new Promise(resolve => {
         const check = setInterval(async () => {
@@ -33,10 +38,6 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
           }
         }, 1000);
       }),
-      (async () => {
-        await new Promise(resolve => setTimeout(resolve, 500)); // pequeña pausa
-        await page.click('a[href*="cl-ti-itmenu"]');
-      })()
     ]);
 
     if (!newTab) throw new Error('❌ No se abrió la pestaña del menú');
@@ -58,7 +59,6 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await sunatPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 });
     console.log('✅ Login enviado');
 
-    // Selección de idioma
     try {
       await sunatPage.waitForSelector('.dropdown-menu.show span', { timeout: 10000 });
       const opciones = await sunatPage.$$('.dropdown-menu.show span');
@@ -74,7 +74,6 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       console.log('✅ No apareció popup de idioma');
     }
 
-    // Procesar mensajes
     try {
       console.log("🧭 Esperando iframe...");
       await sunatPage.waitForSelector('#iframeApplication', { timeout: 60000 });
