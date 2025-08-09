@@ -9,6 +9,19 @@ function safeJoin(base, target) {
   return path.join(base, cleaned);
 }
 
+//Para forzar el https pero se debera hacer en ngnix
+function buildBaseUrl(req) {
+  let protocol = 'https';
+  let host = req.get('host');
+
+  // Si está en local o no es producción, usar el protocolo real
+  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+    protocol = req.protocol;
+  }
+
+  return `${protocol}://${host}`;
+}
+
 
 exports.executeScript = async (req, res) => {
   try {
@@ -18,8 +31,7 @@ exports.executeScript = async (req, res) => {
     if (!out?.success) {
       return res.status(500).json({ success: false, error: out?.error || 'Error', data: [] });
     }
-
-    const base = `${req.protocol}://${req.get('host')}`; // ej: http://localhost:3000
+    const base = buildBaseUrl(req);
 
     const data = (out.data || []).map(item => {
       const names = Array.isArray(item.name_file) ? item.name_file : (item.name_file ? [item.name_file] : []);
