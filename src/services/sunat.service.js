@@ -38,7 +38,7 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'load', timeout: 80000 });
     await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 50000 });
     //Se detiene antes de hacer click  al buzon
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     await (await page.$('a[href*="cl-ti-itmenu"]')).click({ delay: 400 });
 
     console.log("🕒 Esperando nueva pestaña...");
