@@ -37,11 +37,29 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     console.log("🌐 Abriendo página principal...");
     await new Promise(resolve => setTimeout(resolve, 1000));
     await page.goto('https://www.sunat.gob.pe/', { waitUntil: 'load', timeout: 110000 });
+
+    await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 50000 });
+
+    console.log("🖱️ Scroll lento hacia el botón SOL...");
+    await page.evaluate(() => {
+      const el = document.querySelector('a[href*="cl-ti-itmenu"]');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 6000));
+
+    console.log("🖱️ Movimiento del mouse lento...");
+    const botonSol = await page.$('a[href*="cl-ti-itmenu"]');
+    const boundingBox = await botonSol.boundingBox();
+    await page.mouse.move(0, 0);
+    await new Promise(r => setTimeout(r, 1000));
+    await page.mouse.move(
+      boundingBox.x + boundingBox.width / 2,
+      boundingBox.y + boundingBox.height / 2,
+      { steps: 70 }
+    );
     await new Promise(resolve => setTimeout(resolve, 5000));
-    await page.waitForSelector('a[href*="cl-ti-itmenu"]', { visible: true, timeout: 90000 });
-    //Se detiene antes de hacer click  al buzon
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    await (await page.$('a[href*="cl-ti-itmenu"]')).click({ delay: 500 });
+    await botonSol.click({ delay: 400 });
 
     console.log("🕒 Esperando nueva pestaña...");
     const [newTab] = await Promise.all([
