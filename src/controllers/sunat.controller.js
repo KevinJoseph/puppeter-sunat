@@ -36,9 +36,9 @@ exports.executeScript = async (req, res) => {
       };
     });
 
-    return res.json({ success: true, data });
+    return res.json({ success: true, notificaciones: data });
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message, data: [] });
+    return res.status(500).json({ success: false, error: error.message, notificaciones: [] });
   }
 };
 
