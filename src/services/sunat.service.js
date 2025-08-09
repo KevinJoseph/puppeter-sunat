@@ -81,10 +81,10 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
     console.log("⌨️ Llenando formulario de login...");
     await sunatPage.waitForSelector('#txtRuc', { timeout: 30000 });
-    await sunatPage.type('#txtRuc', ruc, { delay: 200 });
-    await sunatPage.type('#txtUsuario', username, { delay: 200 });
-    await sunatPage.type('#txtContrasena', password, { delay: 200 });
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await sunatPage.type('#txtRuc', ruc, { delay: 400 });
+    await sunatPage.type('#txtUsuario', username, { delay: 400 });
+    await sunatPage.type('#txtContrasena', password, { delay: 400 });
+    await new Promise(resolve => setTimeout(resolve, 3000));
     await (await sunatPage.$('#btnAceptar')).click({ delay: 600 });
     await sunatPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 70000 });
 
