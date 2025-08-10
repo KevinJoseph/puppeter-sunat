@@ -6,10 +6,11 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
   let browser = null;
 
   try {
+    
     const downloadDir = path.join(__dirname, `../../download_${ruc}`);
 
     // 0) Carpeta limpia siempre
-    try { await fs.promises.rm(downloadDir, { recursive: true, force: true }); } catch {}
+    await fs.promises.rm(downloadDir, { recursive: true, force: true });
     await fs.promises.mkdir(downloadDir, { recursive: true });
 
     // ==== Helpers ============================================================
@@ -169,11 +170,23 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
 
     // recargar frame con listado
     frame = await getFreshFrame(sunatPage);
-    await frame.waitForSelector('#listaMensajes li a.linkMensaje.text-muted', { timeout: 40000 });
+    await frame.waitForSelector('#listaMensajes', { timeout: 40000 });
 
-    // contar notificaciones visibles
-    let total = await frame.$$eval('#listaMensajes li a.linkMensaje.text-muted', els => els.length);
-    const MAX_A_PROCESAR = total;
+// intenta encontrar al menos un item, pero si no hay, no falles
+let total = 0;
+try {
+  await frame.waitForSelector('#listaMensajes li a.linkMensaje.text-muted', { timeout: 2000 });
+  total = await frame.$$eval('#listaMensajes li a.linkMensaje.text-muted', els => els.length);
+} catch {
+  total = 0; // no hay items visibles
+}
+
+if (total === 0) {
+  console.log('📭 Sin notificaciones.');
+  return { success: true, data: [], message: 'Sin notificaciones' };
+}
+
+const MAX_A_PROCESAR = total;
 
     // ---- pick & download dentro de frame (sin esperas largas) ----------------
     async function pickAndDownloadFromFrame(f) {
@@ -226,16 +239,18 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
       const { asunto, fecha, tag } = infoLista[indice] || { asunto: '', fecha: '', tag: '' };
 
       // abrir la notificación por índice
-      const ok = await evalInFrame(
-        sunatPage,
-        () => getFreshFrame(sunatPage),
-        (i) => {
-          const links = Array.from(document.querySelectorAll('#listaMensajes li a.linkMensaje.text-muted'));
-          if (!links[i]) return false; links[i].click(); return true;
-        },
-        indice
-      );
-      if (!ok) return { ok: false, asunto, fecha, tag, nombre: null };
+const linksOk = await evalInFrame(
+  sunatPage,
+  () => getFreshFrame(sunatPage),
+  (i) => {
+    const links = Array.from(document.querySelectorAll('#listaMensajes li a.linkMensaje.text-muted'));
+    if (!links[i]) return null; // <- indica que ya no hay ese índice
+    links[i].click(); 
+    return true;
+  },
+  indice
+);
+if (linksOk === null) return { ok: false, asunto: '', fecha: '', tag: '', nombre: null };
 
       // frame del detalle (fresco)
       fr = await getFreshFrame(sunatPage);
