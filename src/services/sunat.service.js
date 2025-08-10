@@ -169,7 +169,9 @@ exports.runPuppeteerScript = async (ruc, username, password) => {
     });
 
     // recargar frame con listado
+    await sleep(2000);
     frame = await getFreshFrame(sunatPage);
+    await sleep(4000);
     await frame.waitForSelector('#listaMensajes', { timeout: 40000 });
 
 // intenta encontrar al menos un item, pero si no hay, no falles
