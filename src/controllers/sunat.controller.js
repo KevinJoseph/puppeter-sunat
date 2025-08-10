@@ -39,6 +39,7 @@ exports.executeScript = async (req, res) => {
       //const file_url  = file_urls[0] || ''; // <- la primera (como pediste)
 
       return {
+        numero: item.numero || '',
         asunto: item.asunto || '',
         fecha:  item.fecha  || '',
         tag:    item.tag    || '',
