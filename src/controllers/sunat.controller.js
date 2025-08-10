@@ -35,7 +35,7 @@ exports.executeScript = async (req, res) => {
 
     const data = (out.data || []).map(item => {
       const names = Array.isArray(item.name_file) ? item.name_file : (item.name_file ? [item.name_file] : []);
-      const file_urls = names.map(n => `${base}/api/sunat/download/${encodeURIComponent(ruc)}/${encodeURIComponent(n)}.pdf`);
+      const file_urls = names.map(n => `${base}/api/sunat/download/${encodeURIComponent(ruc)}/${encodeURIComponent(n)}`);
       //const file_url  = file_urls[0] || ''; // <- la primera (como pediste)
 
       return {
